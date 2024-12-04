@@ -34,20 +34,22 @@ export default function SecretSanta() {
       alert("You need at least 2 participants to assign Secret Santas.");
       return;
     }
-
+    // Shuffle participants randomly
     const shuffled = [...participants].sort(() => 0.5 - Math.random());
 
-    let assigned = [];
+    const assigned = [];
+
+    // Assign each participant to the next one in the shuffled
     for (let i = 0; i < shuffled.length; i++) {
       const santa = shuffled[i];
-      const recipient = shuffled[(i + 1) % shuffled.length]; // Circular assignment
-      assigned.push({ ...santa, assignedTo: recipient.name });
+      console.log("santa" + santa);
+      const recipient = shuffled[(i + 1) % shuffled.length]; // Wrap around for last participant
+      assigned.push({ ...santa, assignedTo: recipient.name }); // Assign Santa to Recipient
     }
 
     setParticipants(assigned);
 
-    // Simulate sending SMS notifications
-    // Send SMS notifications via Twilio API
+    //Send SMS via Twilio API
     for (const participant of assigned) {
       try {
         const response = await fetch("/sms/api", {
@@ -78,30 +80,8 @@ export default function SecretSanta() {
       <div className="container mx-auto pt-8">
         <Card className="bg-white shadow-xl">
           <CardHeader className="flex flex-col items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 512 512"
-              className="w-24 h-24 mb-4"
-            >
-              <path
-                fill="#C41E3A"
-                d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 448c-106 0-192-86-192-192S150 64 256 64s192 86 192 192-86 192-192 192z"
-              />
-              <path
-                fill="#C41E3A"
-                d="M256 128c-70.7 0-128 57.3-128 128s57.3 128 128 128 128-57.3 128-128-57.3-128-128-128zm0 224c-52.9 0-96-43.1-96-96s43.1-96 96-96 96 43.1 96 96-43.1 96-96 96z"
-              />
-              <path
-                fill="#FFFFFF"
-                d="M256 192c-35.3 0-64 28.7-64 64s28.7 64 64 64 64-28.7 64-64-28.7-64-64-64zm0 96c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z"
-              />
-              <path
-                fill="#C41E3A"
-                d="M256 224c-17.6 0-32 14.4-32 32s14.4 32 32 32 32-14.4 32-32-14.4-32-32-32z"
-              />
-            </svg>
             <CardTitle className="text-4xl font-bold text-center text-gray-800">
-              Secret Santa Organizer
+              Secret Santa
             </CardTitle>
           </CardHeader>
           <CardContent>
