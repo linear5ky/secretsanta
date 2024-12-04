@@ -1,101 +1,181 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GiftIcon, UserPlusIcon, PhoneIcon } from "lucide-react";
+
+type Participant = {
+  name: string;
+  phone: string;
+  assignedTo?: string;
+};
+
+export default function SecretSanta() {
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const addParticipant = () => {
+    if (name && phone) {
+      setParticipants([...participants, { name, phone }]);
+      setName("");
+      setPhone("");
+      alert(`${name} added with phone number ${phone}`);
+    } else {
+      alert("Please provide both name and phone number for the participant.");
+    }
+  };
+
+  const assignSecretSantas = async () => {
+    if (participants.length < 2) {
+      alert("You need at least 2 participants to assign Secret Santas.");
+      return;
+    }
+
+    const shuffled = [...participants].sort(() => 0.5 - Math.random());
+
+    let assigned = [];
+    for (let i = 0; i < shuffled.length; i++) {
+      const santa = shuffled[i];
+      const recipient = shuffled[(i + 1) % shuffled.length]; // Circular assignment
+      assigned.push({ ...santa, assignedTo: recipient.name });
+    }
+
+    setParticipants(assigned);
+
+    // Simulate sending SMS notifications
+    // Send SMS notifications via Twilio API
+    for (const participant of assigned) {
+      try {
+        const response = await fetch("/sms/api", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: participant.phone,
+            message: `Hi ${participant.name}, you are Secret Santa for ${participant.assignedTo}!`,
+          }),
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          console.error(
+            `Failed to send SMS to ${participant.phone}: ${result.error}`
+          );
+        }
+      } catch (error) {
+        console.error(`Error sending SMS to ${participant.phone}:`, error);
+      }
+    }
+
+    alert("Secret Santas assigned and notifications sent!");
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="min-h-screen bg-black p-4">
+      <div className="container mx-auto pt-8">
+        <Card className="bg-white shadow-xl">
+          <CardHeader className="flex flex-col items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 512 512"
+              className="w-24 h-24 mb-4"
+            >
+              <path
+                fill="#C41E3A"
+                d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 448c-106 0-192-86-192-192S150 64 256 64s192 86 192 192-86 192-192 192z"
+              />
+              <path
+                fill="#C41E3A"
+                d="M256 128c-70.7 0-128 57.3-128 128s57.3 128 128 128 128-57.3 128-128-57.3-128-128-128zm0 224c-52.9 0-96-43.1-96-96s43.1-96 96-96 96 43.1 96 96-43.1 96-96 96z"
+              />
+              <path
+                fill="#FFFFFF"
+                d="M256 192c-35.3 0-64 28.7-64 64s28.7 64 64 64 64-28.7 64-64-28.7-64-64-64zm0 96c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z"
+              />
+              <path
+                fill="#C41E3A"
+                d="M256 224c-17.6 0-32 14.4-32 32s14.4 32 32 32 32-14.4 32-32-14.4-32-32-32z"
+              />
+            </svg>
+            <CardTitle className="text-4xl font-bold text-center text-gray-800">
+              Secret Santa Organizer
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+                Add Participant
+              </h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="border-gray-300"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="Phone Number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="border-gray-300"
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={addParticipant}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <UserPlusIcon className="mr-2 h-4 w-4" /> Add Participant
+                </Button>
+              </div>
+            </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+                Participants
+              </h2>
+              <ul className="space-y-2">
+                {participants.map((participant, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center space-x-2 text-gray-700"
+                  >
+                    <GiftIcon className="h-5 w-5 text-blue-500" />
+                    <span className="font-semibold">{participant.name}</span>
+                    <span className="flex items-center text-sm text-gray-500">
+                      <PhoneIcon className="h-4 w-4 mr-1" />
+                      {participant.phone}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mb-8">
+              <Button
+                onClick={assignSecretSantas}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <GiftIcon className="mr-2 h-4 w-4" /> Assign Secret Santas &
+                Send Notifications
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
